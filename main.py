@@ -1,28 +1,36 @@
 from qiskit import QuantumCircuit
 
 
-def qubitNames(circuit: QuantumCircuit) -> dict:
-    qubitsList = {}
-    for qubits in circuit.qubits:
-        print(qubits)
-        index = 0  # TODO
-        qubitName = "q0"  # TODO
-        qubitsList[qubitName] = index
-    return qubitsList
+def bitsNames(circuit: QuantumCircuit, isQubit: bool = True) -> dict:
+    bitsDictionary = {}
+    if isQubit:
+        bitsList = circuit.qubits
+    else:
+        bitsList = circuit.clbits
+    for i, bits in enumerate(bitsList):
+        print(bits)
+        index = bits._index
+        registerName = bits._register.name
+        qubitName = registerName + index.__str__()
+        bitsDictionary[qubitName] = i
+    return bitsDictionary
 
 
 def convert(circuit: QuantumCircuit) -> str:
-    qubitsList = qubitNames(circuit)
+    qubitsList = bitsNames(circuit)
+    clbitsList = bitsNames(circuit, isQubit=False)
+    print(qubitsList)
+    print(clbitsList)
     # print(circuit.data)
-    for circuitInstruction in circuit.data:
-        operation = circuitInstruction.operation
-        qubits = circuitInstruction.qubits
-        clbits = circuitInstruction.clbits
+    # for circuitInstruction in circuit.data:
+    #   operation = circuitInstruction.operation
+    #   qubits = circuitInstruction.qubits
+    #   clbits = circuitInstruction.clbits
 
-        print(operation)
-        print(qubits)
-        print(clbits)
-        print("")
+    #   print(operation)
+    #   print(qubits)
+    #   print(clbits)
+    #   print("")
     return print(circuit)
 
 
