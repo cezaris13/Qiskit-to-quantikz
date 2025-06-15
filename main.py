@@ -49,7 +49,6 @@ def qiskit_to_quantikz(
         subcircs = [qc]
 
     def render(sub: QuantumCircuit) -> str:
-        nonlocal barrier_queue
         n_q = sub.num_qubits
         n_c = sub.num_clbits if include_clbits else 0
         q_lines = [[] for _ in range(n_q)]
