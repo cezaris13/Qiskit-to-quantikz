@@ -87,7 +87,7 @@ def _render_cswap(
             off = s0 - ctrl
             q_lines[i].append(rf"\ctrl{{{off}}}" + token_slice)
         elif i == s0:
-            q_lines[i].append(r"\swap{}" + token_slice)
+            q_lines[i].append(rf"\swap{{{s1-s0}}}" + token_slice)
         elif i == s1:
             q_lines[i].append(r"\targX{}" + token_slice)
         else:
@@ -125,6 +125,19 @@ def _render_two_qubit(
 ):
     ctrl, tgt = sub.qubits.index(qargs[0]), sub.qubits.index(qargs[1])
     name = instr.name.lower()
+    params = getattr(instr, "params", [])
+    # Handle controlled rotation gates with parameters
+    if name in ("crx", "cry", "crz") and params:
+        axis = name[-1]
+        theta = params[0]
+        for i in range(sub.num_qubits):
+            if i == ctrl:
+                q_lines[i].append(rf"\ctrl{{{tgt-ctrl}}}" + token_slice)
+            elif i == tgt:
+                q_lines[i].append(rf"\gate{{R_{axis}({theta})}}" + token_slice)
+            else:
+                q_lines[i].append(r"\qw" + token_slice)
+        return
     for i in range(sub.num_qubits):
         if name in ("cx", "cnot") and i == ctrl:
             q_lines[i].append(rf"\ctrl{{{tgt-ctrl}}}" + token_slice)
@@ -147,7 +160,21 @@ def _render_two_qubit(
 def _render_default(
     instr, qargs, sub: QuantumCircuit, q_lines, c_lines, token_slice: str
 ):
+    name = instr.name.lower()
     targets = {sub.qubits.index(q) for q in qargs}
+    params = getattr(instr, "params", [])
+    # Handle single-qubit rotation gates with parameters
+    if len(qargs) == 1 and name in ("rx", "ry", "rz") and params:
+        axis = name[-1]
+        theta = params[0]
+        for i in range(sub.num_qubits):
+            if sub.qubits.index(qargs[0]) == i:
+                q_lines[i].append(rf"\gate{{R_{axis}({theta})}}" + token_slice)
+            else:
+                q_lines[i].append(r"\qw" + token_slice)
+        for _ in range(len(c_lines)):
+            c_lines[_].append(r"\qw" + token_slice)
+        return
     for i in range(sub.num_qubits):
         if i in targets:
             q_lines[i].append(rf"\gate{{{instr.name.upper()}}}" + token_slice)

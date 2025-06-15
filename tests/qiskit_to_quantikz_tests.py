@@ -107,7 +107,7 @@ class QuantikzTests(absltest.TestCase):
 
     def test_swap_with_space(self):
         actual_result = r"""\begin{quantikz}
-\lstick{${q_0}$} & \swap{1} & \\
+\lstick{${q_0}$} & \swap{2} & \\
 \lstick{${q_1}$} & \qw & \\
 \lstick{${q_2}$} & \targX{} & \\
 \end{quantikz}"""
@@ -149,14 +149,12 @@ class QuantikzTests(absltest.TestCase):
         actual_result = r"""\begin{quantikz}
 \lstick{${q_0}$} & \ctrl{1} & \\
 \lstick{${q_1}$} & \gate{R_x(0.5)} & \\
-\end{quantikz}
-"""
+\end{quantikz}"""
 
         circuit = QuantumCircuit(2)
         circuit.crx(0.5, 0, 1)
 
         result = qq.qiskit_to_quantikz(circuit)
-        print(result)
         self.assertEqual(result, actual_result)
 
     def test_cswap(self):
@@ -170,35 +168,6 @@ class QuantikzTests(absltest.TestCase):
         circuit.cswap(0, 1, 2)
 
         result = qq.qiskit_to_quantikz(circuit)
-        print(result)
-        self.assertEqual(result, actual_result)
-
-    def test_cx_measure_no_cl_bits(self):
-        actual_result = r"""\begin{quantikz}
-\lstick{${q_0}$} & \ctrl{1} & \meter{} & \qw & \\
-\lstick{${q_1}$} & \targ{} & \qw & \meter{} & \\
-\end{quantikz}"""
-
-        circuit = QuantumCircuit(2, 2)
-        circuit.cx(0, 1)
-        circuit.measure([0, 1], [0, 1])
-        result = qq.qiskit_to_quantikz(circuit, include_clbits=False)
-        print(result)
-        self.assertEqual(result, actual_result)
-
-    def test_cx_measure_cl_bits(self):
-        actual_result = r"""\begin{quantikz}
-\lstick{${q_0}$} & \ctrl{1} & \meter{} & \qw & \\
-\lstick{${q_1}$} & \targ{} & \qw & \meter{} & \\
-\lstick{${c_0}$} & \qw & \cw & \qw & \\
-\lstick{${c_1}$} & \qw & \qw & \cw & \\
-\end{quantikz}"""
-
-        circuit = QuantumCircuit(2, 2)
-        circuit.cx(0, 1)
-        circuit.measure([0, 1], [0, 1])
-        result = qq.qiskit_to_quantikz(circuit, include_clbits=True)
-        print(result)
         self.assertEqual(result, actual_result)
 
     def test_cswap_space_between_swaps_and_controls(self):
@@ -214,7 +183,32 @@ class QuantikzTests(absltest.TestCase):
         circuit.cswap(0, 2, 4)
 
         result = qq.qiskit_to_quantikz(circuit)
-        print(result)
+        self.assertEqual(result, actual_result)
+
+    def test_cx_measure_no_cl_bits(self):
+        actual_result = r"""\begin{quantikz}
+\lstick{${q_0}$} & \ctrl{1} & \meter{} & \qw & \\
+\lstick{${q_1}$} & \targ{} & \qw & \meter{} & \\
+\end{quantikz}"""
+
+        circuit = QuantumCircuit(2, 2)
+        circuit.cx(0, 1)
+        circuit.measure([0, 1], [0, 1])
+        result = qq.qiskit_to_quantikz(circuit, include_clbits=False)
+        self.assertEqual(result, actual_result)
+
+    def test_cx_measure_cl_bits(self):
+        actual_result = r"""\begin{quantikz}
+\lstick{${q_0}$} & \ctrl{1} & \meter{} & \qw & \\
+\lstick{${q_1}$} & \targ{} & \qw & \meter{} & \\
+\lstick{${c_0}$} & \qw & \cw & \qw & \\
+\lstick{${c_1}$} & \qw & \qw & \cw & \\
+\end{quantikz}"""
+
+        circuit = QuantumCircuit(2, 2)
+        circuit.cx(0, 1)
+        circuit.measure([0, 1], [0, 1])
+        result = qq.qiskit_to_quantikz(circuit, include_clbits=True)
         self.assertEqual(result, actual_result)
 
 
