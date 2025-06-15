@@ -121,7 +121,7 @@ def qiskit_to_quantikz(
                 if name in ("ccx", "mct") or "x" in name:
                     targ_sym = r"\targ{}"
                 elif name in ("ccz") or name.endswith("z"):
-                    targ_sym = r"\ctrl{}"
+                    targ_sym = r"\ctrl{0}"
                 else:
                     targ_sym = rf"\gate{{{instr.name.upper()}}}"
                 for i in range(n_q):
@@ -185,9 +185,9 @@ def qiskit_to_quantikz(
             for j, line in enumerate(c_lines):
                 line.insert(0, rf"\lstick{{${{c_{j}}}$}}")
 
-        rows = [" & ".join(l) + r" \\" for l in q_lines]
+        rows = [" & ".join(l) + r" & \\" for l in q_lines]
         if include_clbits:
-            rows += [" & ".join(l) + r" \\" for l in c_lines]
+            rows += [" & ".join(l) + r" & \\" for l in c_lines]
         body = "\n".join(rows)
         return "\n".join([r"\begin{quantikz}", body, r"\end{quantikz}"])
 
