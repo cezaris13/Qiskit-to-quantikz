@@ -48,8 +48,6 @@ def qiskit_to_quantikz(
     else:
         subcircs = [qc]
 
-    barrier_queue = barrier_names.copy() if barrier_names else []
-
     def render(sub: QuantumCircuit) -> str:
         nonlocal barrier_queue
         n_q = sub.num_qubits
