@@ -11,9 +11,17 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
+dependencies = [
+  "qiskit>=1.2.4"
+]
+
 license = "MIT"
 license-files = ["LICEN[CS]E*"]
 
 [project.urls]
 Homepage = "https://github.com/cezaris13/Qiskit-to-quantikz"
 Issues = "https://github.com/cezaris13/Qiskit-to-quantikz/issues"
+
+[build-system]
+requires = ["hatchling >= 1.26"]
+build-backend = "hatchling.build"
