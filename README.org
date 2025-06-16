@@ -17,6 +17,12 @@ This module provides utilities to convert Qiskit's `QuantumCircuit` objects into
   - Parametrized rotations (RX, RY, RZ)
 - Optional in-place slice labeling
 
+* Installation
+To install the package and its dependencies, run:
+#+BEGIN_SRC sh
+pip install -i https://test.pypi.org/simple/qiskit-to-quantikz-cezaris13==0.0.1
+#+END_SRC
+
 * Usage
 
 ** Basic Rendering
