@@ -2,7 +2,7 @@ from qiskit import QuantumCircuit
 from typing import List, Optional, Union, Dict
 
 
-def split_circuit_by_indices(
+def _split_circuit_by_indices(
     qc: QuantumCircuit, boundaries: List[int]
 ) -> List[QuantumCircuit]:
     """
@@ -17,13 +17,13 @@ def split_circuit_by_indices(
     return subcircuits
 
 
-def split_circuit_by_count(qc: QuantumCircuit, n_slices: int) -> List[QuantumCircuit]:
+def _split_circuit_by_count(qc: QuantumCircuit, n_slices: int) -> List[QuantumCircuit]:
     """
     Evenly split a QuantumCircuit's instructions into n_slices parts.
     """
     total_ops = len(qc.data)
     breaks = [round(i * total_ops / n_slices) for i in range(n_slices + 1)]
-    return split_circuit_by_indices(qc, breaks)
+    return _split_circuit_by_indices(qc, breaks)
 
 
 # --- Helper render functions ---
@@ -171,7 +171,7 @@ def _render_default(
         c_lines[_].append(r"\qw" + token_slice)
 
 
-def render(
+def _render(
     sub: QuantumCircuit,
     include_clbits: bool = True,
     slice_titles: Optional[Dict[int, str]] = None,
@@ -205,12 +205,12 @@ def render(
     if c_lines:
         rows += [" & ".join(l) + r" & \\" for l in c_lines]
     body = "\n".join(rows)
-    return remove_last_occurrence(
+    return _remove_last_occurrence(
         "\n".join([r"\begin{quantikz}", body, r"\end{quantikz}"]), r" \\"
     )
 
 
-def remove_last_occurrence(s, sub):
+def _remove_last_occurrence(s, sub):
     index = s.rfind(sub)
     if index == -1:
         return s
@@ -231,12 +231,12 @@ def qiskit_to_quantikz(
     - Otherwise, if slice_indices or n_slices>1, returns a list of subcircuit strings.
     """
     if slice_all or (slice_titles and len(slice_titles) > 0):
-        return render(qc, include_clbits, slice_titles, slice_all)
+        return _render(qc, include_clbits, slice_titles, slice_all)
     if slice_indices or (n_slices and n_slices > 1):
         if slice_indices:
             bounds = sorted({0, *slice_indices, len(qc.data)})
-            subcircs = split_circuit_by_indices(qc, bounds)
+            subcircs = _split_circuit_by_indices(qc, bounds)
         else:
-            subcircs = split_circuit_by_count(qc, n_slices)
-        return [render(s, include_clbits, slice_titles, slice_all) for s in subcircs]
-    return render(qc, include_clbits, slice_titles, slice_all)
+            subcircs = _split_circuit_by_count(qc, n_slices)
+        return [_render(s, include_clbits, slice_titles, slice_all) for s in subcircs]
+    return _render(qc, include_clbits, slice_titles, slice_all)

@@ -1,0 +1,19 @@
+[project]
+name = "qiskit_to_quantikz_cezaris13"
+version = "0.0.1"
+authors = [
+  { name="Pijus Petkevičius", email="pijus.petkevicius314@gmail.com" },
+]
+description = "A Python tool to convert Qiskit circuits to quantikz LaTeX code for visualization."
+readme = "README.org"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+
+[project.urls]
+Homepage = "https://github.com/cezaris13/Qiskit-to-quantikz"
+Issues = "https://github.com/cezaris13/Qiskit-to-quantikz/issues"
