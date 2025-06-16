@@ -1,1 +1,53 @@
-#+title: Readme
+#+TITLE: Qiskit to Quantikz LaTeX Renderer
+
+* Overview
+This module provides utilities to convert Qiskit's `QuantumCircuit` objects into LaTeX using the Quantikz package. It supports:
+- Slicing circuits into subcircuits
+- Annotating slices with `\slice{}` labels
+- Detailed gate rendering with parameter support
+- Automatic handling of classical bits (clbits)
+
+* Features
+- Split circuits by index or into equal-sized chunks
+- Render quantum and classical wires
+- Gate-specific LaTeX rendering for:
+  - Measurements
+  - SWAP and CSWAP
+  - Controlled gates (CX, CZ, CRX, etc.)
+  - Parametrized rotations (RX, RY, RZ)
+- Optional in-place slice labeling
+
+* Usage
+
+** Basic Rendering
+To convert a single Qiskit circuit:
+#+BEGIN_SRC python
+from qiskit import QuantumCircuit
+from your_module import qiskit_to_quantikz
+
+qc = QuantumCircuit(2, 2)
+qc.h(0)
+qc.cx(0, 1)
+qc.measure([0, 1], [0, 1])
+
+latex = qiskit_to_quantikz(qc)
+print(latex)
+#+END_SRC
+
+** Splitting Circuit into Slices
+To split into 3 equal parts:
+#+BEGIN_SRC python
+latex_parts = qiskit_to_quantikz(qc, n_slices=3)
+#+END_SRC
+
+** Manual Slice Annotation
+To annotate slices inline with custom titles:
+#+BEGIN_SRC python
+slice_titles = {0: "Init", 1: "Entangle", 2: "Measure"}
+latex = qiskit_to_quantikz(qc, slice_all=True, slice_titles=slice_titles)
+#+END_SRC
+
+* Requirements
+- Python 3.10+
+- Qiskit
+- LaTeX with TikZ and Quantikz installed
