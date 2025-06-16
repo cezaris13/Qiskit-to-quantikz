@@ -230,10 +230,8 @@ def qiskit_to_quantikz(
     - If slice_all or slice_titles is used, returns one string with in-place \\slice annotations.
     - Otherwise, if slice_indices or n_slices>1, returns a list of subcircuit strings.
     """
-    # In-place slicing has priority
     if slice_all or (slice_titles and len(slice_titles) > 0):
         return render(qc, include_clbits, slice_titles, slice_all)
-    # If splitting requested, do legacy behavior
     if slice_indices or (n_slices and n_slices > 1):
         if slice_indices:
             bounds = sorted({0, *slice_indices, len(qc.data)})
@@ -241,5 +239,4 @@ def qiskit_to_quantikz(
         else:
             subcircs = split_circuit_by_count(qc, n_slices)
         return [render(s, include_clbits, slice_titles, slice_all) for s in subcircs]
-    # Default single circuit
     return render(qc, include_clbits, slice_titles, slice_all)
