@@ -29,28 +29,28 @@ pip install qiskit-to-quantikz-cezaris13==0.0.2 -i https://test.pypi.org/simple/
 To convert a single Qiskit circuit:
 #+BEGIN_SRC python
 from qiskit import QuantumCircuit
-from your_module import qiskit_to_quantikz
+import qiskit_to_quantikz_cezaris13.qiskit_quantikz as qq
 
 qc = QuantumCircuit(2, 2)
 qc.h(0)
 qc.cx(0, 1)
 qc.measure([0, 1], [0, 1])
 
-latex = qiskit_to_quantikz(qc)
+latex = qq.qiskit_to_quantikz(qc)
 print(latex)
 #+END_SRC
 
 ** Splitting Circuit into Slices
 To split into 3 equal parts:
 #+BEGIN_SRC python
-latex_parts = qiskit_to_quantikz(qc, n_slices=3)
+latex_parts = qq.qiskit_to_quantikz(qc, n_slices=3)
 #+END_SRC
 
 ** Manual Slice Annotation
 To annotate slices inline with custom titles:
 #+BEGIN_SRC python
 slice_titles = {0: "Init", 1: "Entangle", 2: "Measure"}
-latex = qiskit_to_quantikz(qc, slice_all=True, slice_titles=slice_titles)
+latex = qq.qiskit_to_quantikz(qc, slice_all=True, slice_titles=slice_titles)
 #+END_SRC
 
 * Requirements
