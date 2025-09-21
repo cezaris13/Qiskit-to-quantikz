@@ -1,6 +1,6 @@
 [project]
 name = "qiskit_to_quantikz_cezaris13"
-version = "0.0.4"
+version = "0.0.5"
 authors = [
   { name="Pijus Petkevičius", email="pijus.petkevicius314@gmail.com" },
 ]

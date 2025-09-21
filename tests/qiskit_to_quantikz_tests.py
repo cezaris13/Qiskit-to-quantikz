@@ -6,7 +6,8 @@ import sys
 
 from absl.testing import absltest
 from qiskit import QuantumCircuit
-
+from qiskit.quantum_info import random_unitary
+from qiskit.circuit.library import UnitaryGate
 
 sys.path.append("..")
 
@@ -216,26 +217,6 @@ class QuantikzTests(absltest.TestCase):
         result = qiskit_to_quantikz(circuit, include_clbits=True)
         self.assertEqual(result, actual_result)
 
-    # -- New slicing tests --
-    # def test_split_circuit_by_indices_basic(self):
-    #     qc = QuantumCircuit(2)
-    #     qc.h(0)
-    #     qc.cx(0, 1)
-    #     qc.x(1)
-    #     subs = split_circuit_by_indices(qc, [0, 1, 3])
-    #     self.assertEqual(len(subs), 2)
-    #     self.assertEqual(subs[0].data[0][0].name.lower(), "h")
-    #     self.assertEqual(subs[1].data[0][0].name.lower(), "cx")
-    #     self.assertEqual(subs[1].data[1][0].name.lower(), "x")
-
-    # def test_split_circuit_by_count_even(self):
-    #     qc = QuantumCircuit(1)
-    #     for _ in range(4):
-    #         qc.x(0)
-    #     subs = split_circuitquantikz_by_count(qc, 2)
-    #     self.assertEqual(len(subs), 2)
-    #     self.assertTrue(all(len(s.data) == 2 for s in subs))
-
     def test_slicing_all(self):
         qc = QuantumCircuit(1)
         qc.h(0)
@@ -259,6 +240,43 @@ class QuantikzTests(absltest.TestCase):
         self.assertIn("\\slice{init}", latex)
         self.assertIn("\\slice{middle}", latex)
         self.assertIn("\\slice{end}", latex)
+
+    def test_2_gate_custom_unitary(self):
+        actual_result = r"""\begin{quantikz}
+\lstick{${q_0}$} & \gate[2]{unitary} & \\
+\lstick{${q_1}$} & \qw &
+\end{quantikz}"""
+        u = random_unitary(4).data
+
+        unitary_gate = UnitaryGate(u)
+
+        qc = QuantumCircuit(2)
+        qc.append(unitary_gate, [0, 1])
+        qc.draw("mpl")
+
+        result = qiskit_to_quantikz(qc)
+        self.assertEqual(result, actual_result)
+
+    def test_3_2_gate_custom_unitaries(self):
+        actual_result = r"""\begin{quantikz}
+\lstick{${q_0}$} & \gate[2]{unitary} & \gate[3]{unitary} & \qw & \\
+\lstick{${q_1}$} & \qw & \qw & \gate[2]{unitary} & \\
+\lstick{${q_2}$} & \qw & \qw & \qw &
+\end{quantikz}"""
+        u_1 = random_unitary(4).data
+        u_2 = random_unitary(8).data
+
+        unitary_gate_1 = UnitaryGate(u_1)
+        unitary_gate_2 = UnitaryGate(u_2)
+
+        qc = QuantumCircuit(3)
+        qc.append(unitary_gate_1, [0, 1])
+        qc.append(unitary_gate_2, [0, 1,2])
+        qc.append(unitary_gate_1, [1, 2])
+        qc.draw("mpl")
+
+        result = qiskit_to_quantikz(qc)
+        self.assertEqual(result, actual_result)
 
 
 if __name__ == "__main__":

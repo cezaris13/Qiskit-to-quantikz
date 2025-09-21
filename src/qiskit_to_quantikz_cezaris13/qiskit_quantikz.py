@@ -44,7 +44,7 @@ def _add_slices(col: int, slice_all: bool, slice_titles: Optional[Dict[int, str]
 
 
 def _render_measure(
-    instr, qargs, cargs, sub: QuantumCircuit, q_lines, c_lines, token_slice: str
+    qargs, cargs, sub: QuantumCircuit, q_lines, c_lines, token_slice: str
 ):
     measured = {sub.qubits.index(q) for q in qargs}
     for i in range(sub.num_qubits):
@@ -67,8 +67,19 @@ def _render_swap(qargs, sub: QuantumCircuit, q_lines, c_lines, token_slice: str)
         c_lines[_].append(r"\qw" + token_slice)
 
 
+def _render_unitary_gate(instr, qargs, sub: QuantumCircuit, q_lines, c_lines, token_slice: str):
+    i0, _ = sorted((sub.qubits.index(qargs[0]), sub.qubits.index(qargs[1])))
+    for i in range(sub.num_qubits):
+        if i == i0:
+            q_lines[i].append(rf"\gate[{instr.num_qubits}]{{{instr.name}}}" + token_slice)
+        else:
+            q_lines[i].append(r"\qw" + token_slice)
+    for _ in range(len(c_lines)):
+        c_lines[_].append(r"\qw" + token_slice)
+
+
 def _render_cswap(
-    instr, qargs, sub: QuantumCircuit, q_lines, c_lines, token_slice: str
+    qargs, sub: QuantumCircuit, q_lines, c_lines, token_slice: str
 ):
     ctrl, s0, s1 = [sub.qubits.index(q) for q in qargs]
     for i in range(sub.num_qubits):
@@ -127,20 +138,27 @@ def _render_two_qubit(
                 q_lines[i].append(r"\qw" + token_slice)
     else:
         for i in range(sub.num_qubits):
-            if name in ("cx", "cnot") and i == ctrl:
-                q_lines[i].append(rf"\ctrl{{{tgt-ctrl}}}" + token_slice)
-            elif name in ("cx", "cnot") and i == tgt:
-                q_lines[i].append(r"\targ{}" + token_slice)
-            elif name == "cz" and i == ctrl:
-                q_lines[i].append(rf"\ctrl{{{tgt-ctrl}}}" + token_slice)
-            elif name == "cz" and i == tgt:
-                q_lines[i].append(rf"\ctrl{{{ctrl-tgt}}}" + token_slice)
-            elif i == ctrl:
-                q_lines[i].append(rf"\ctrl{{{tgt-ctrl}}}" + token_slice)
-            elif i == tgt:
-                q_lines[i].append(rf"\gate{{{instr.name.upper()}}}" + token_slice)
+            if name in ("cx","cnot"):
+                if i == ctrl:
+                    q_lines[i].append(rf"\ctrl{{{tgt-ctrl}}}" + token_slice)
+                elif i == tgt:
+                    q_lines[i].append(r"\targ{}" + token_slice)
+                else:
+                    q_lines[i].append(r"\qw" + token_slice)
+            elif name == "cz":
+                if i == ctrl:
+                    q_lines[i].append(rf"\ctrl{{{tgt-ctrl}}}" + token_slice)
+                elif i == tgt:
+                    q_lines[i].append(rf"\ctrl{{{ctrl-tgt}}}" + token_slice)
+                else:
+                    q_lines[i].append(r"\qw" + token_slice)
             else:
-                q_lines[i].append(r"\qw" + token_slice)
+                if i == ctrl:
+                    q_lines[i].append(rf"\ctrl{{{tgt-ctrl}}}" + token_slice)
+                elif i == tgt:
+                    q_lines[i].append(rf"\gate{{{instr.name.upper()}}}" + token_slice)
+                else:
+                    q_lines[i].append(r"\qw" + token_slice)
     for _ in range(len(c_lines)):
         c_lines[_].append(r"\qw" + token_slice)
 
@@ -185,11 +203,13 @@ def _render(
         token_slice = _add_slices(col, slice_all, slice_titles)
         name = instr.name.lower()
         if name == "measure":
-            _render_measure(instr, qargs, cargs, sub, q_lines, c_lines, token_slice)
+            _render_measure(qargs, cargs, sub, q_lines, c_lines, token_slice)
+        elif instr.name == "unitary":
+            _render_unitary_gate(instr, qargs, sub, q_lines, c_lines, token_slice)
         elif name == "swap" and instr.num_qubits == 2:
             _render_swap(qargs, sub, q_lines, c_lines, token_slice)
         elif name in ("cswap", "fredkin") and instr.num_qubits == 3:
-            _render_cswap(instr, qargs, sub, q_lines, c_lines, token_slice)
+            _render_cswap(qargs, sub, q_lines, c_lines, token_slice)
         elif instr.num_qubits >= 3 and name not in ("cswap", "fredkin"):
             _render_multi_qubit(instr, qargs, sub, q_lines, c_lines, token_slice)
         elif instr.num_qubits == 2:

@@ -20,7 +20,7 @@ This module provides utilities to convert Qiskit's `QuantumCircuit` objects into
 * Installation
 To install the package and its dependencies, run:
 #+BEGIN_SRC sh
-pip install qiskit-to-quantikz-cezaris13==0.0.4 -i https://test.pypi.org/simple/
+pip install qiskit-to-quantikz-cezaris13 -i https://test.pypi.org/simple/
 #+END_SRC
 
 * Usage
