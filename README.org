@@ -46,21 +46,23 @@ To split into 3 equal parts:
 #+BEGIN_SRC python
 latex_parts = qq.qiskit_to_quantikz(qc, num_subcircuits=3)
 #+END_SRC
+
+Qiskit representation:
 #+attr_html: :alt  :align left :class imgS
-#+CAPTION: Qiskit representation
-#+NAME:   fig:SED-HR4049
 [[./Images/qiskit.jpeg]]
 
-#+attr_html: :alt  :align left :class img
-[[./Images/quantikz.jpeg][Quantikz representation]]
+Quantikz representation:
+#+attr_html: :alt  :align left :class imgS
+[[./Images/quantikz.jpeg]]
 ** Manual Slice Annotation
 To annotate slices inline with custom titles:
 #+BEGIN_SRC python
 slice_titles = {0: "|\psi_0\rangle", 1: "|\psi_1\rangle", 2: "|\psi_2\rangle"}
 latex = qq.qiskit_to_quantikz(qc, slice_titles=slice_titles)
 #+END_SRC
-#+attr_html: :alt  :align left :class img
-[[./Images/quantikz_slices.jpeg][Quantikz slices]]
+#+attr_html: :alt  :align left :class imgs
+Quantikz slices:
+[[./Images/quantikz_slices.jpeg]]
 
 
 
