@@ -15,6 +15,7 @@ This module provides utilities to convert Qiskit's `QuantumCircuit` objects into
   - SWAP and CSWAP
   - Controlled gates (CX, CZ, CRX, etc.)
   - Parametrized rotations (RX, RY, RZ)
+  - Custom unitary matrices rendering
 - Optional in-place slice labeling
 
 * Installation
@@ -43,15 +44,23 @@ print(latex)
 ** Splitting Circuit into Slices
 To split into 3 equal parts:
 #+BEGIN_SRC python
-latex_parts = qq.qiskit_to_quantikz(qc, n_slices=3)
+latex_parts = qq.qiskit_to_quantikz(qc, num_subcircuits=3)
 #+END_SRC
+#+attr_html: :alt  :align left :class imgS
+[[./Images/qiskit.jpeg][Qiskit representation]]
 
+#+attr_html: :alt  :align left :class img
+[[./Images/quantikz.jpeg][Quantikz representation]]
 ** Manual Slice Annotation
 To annotate slices inline with custom titles:
 #+BEGIN_SRC python
-slice_titles = {0: "Init", 1: "Entangle", 2: "Measure"}
-latex = qq.qiskit_to_quantikz(qc, slice_all=True, slice_titles=slice_titles)
+slice_titles = {0: "|\psi_0\rangle", 1: "|\psi_1\rangle", 2: "|\psi_2\rangle"}
+latex = qq.qiskit_to_quantikz(qc, slice_titles=slice_titles)
 #+END_SRC
+#+attr_html: :alt  :align left :class img
+[[./Images/quantikz_slices.jpeg][Quantikz slices]]
+
+
 
 * Requirements
 - Python 3.10+

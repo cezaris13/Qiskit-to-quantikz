@@ -11,18 +11,19 @@ def _split_circuit_by_indices(
     subcircuits = []
     for start, end in zip(boundaries[:-1], boundaries[1:]):
         sub = QuantumCircuit(qc.num_qubits, qc.num_clbits)
-        for instr, qargs, cargs in qc.data[start:end]:
+        for circuit_instruction in qc.data[start:end]:
+            instr, qargs, cargs = circuit_instruction.operation, circuit_instruction.qubits, circuit_instruction.clbits
             sub.append(instr, qargs, cargs)
         subcircuits.append(sub)
     return subcircuits
 
 
-def _split_circuit_by_count(qc: QuantumCircuit, n_slices: int) -> List[QuantumCircuit]:
+def _split_circuit_by_count(qc: QuantumCircuit, num_subcircuits: int) -> List[QuantumCircuit]:
     """
-    Evenly split a QuantumCircuit's instructions into n_slices parts.
+    Evenly split a QuantumCircuit's instructions into num_subcircuits parts.
     """
     total_ops = len(qc.data)
-    breaks = [round(i * total_ops / n_slices) for i in range(n_slices + 1)]
+    breaks = [round(i * total_ops / num_subcircuits) for i in range(num_subcircuits + 1)]
     return _split_circuit_by_indices(qc, breaks)
 
 
@@ -199,7 +200,8 @@ def _render(
     Render a single QuantumCircuit subcircuit into Quantikz LaTeX, with optional in-place slice annotations.
     """
     q_lines, c_lines = _init_lines(sub, include_clbits)
-    for col, (instr, qargs, cargs) in enumerate(sub.data):
+    for col, circuit_instruction in enumerate(sub.data):
+        instr, qargs, cargs = circuit_instruction.operation, circuit_instruction.qubits, circuit_instruction.clbits
         token_slice = _add_slices(col, slice_all, slice_titles)
         name = instr.name.lower()
         if name == "measure":
@@ -240,23 +242,23 @@ def _remove_last_occurrence(s, sub):
 def qiskit_to_quantikz(
     qc: QuantumCircuit,
     include_clbits: bool = True,
-    n_slices: Optional[int] = None,
-    slice_indices: Optional[List[int]] = None,
+    num_subcircuits: Optional[int] = None,
+    subcircuit_indices: Optional[List[int]] = None,
     slice_titles: Optional[Dict[int, str]] = None,
     slice_all: bool = False,
 ) -> Union[str, List[str]]:
     """
     Convert a Qiskit QuantumCircuit into quantikz LaTeX.
     - If slice_all or slice_titles is used, returns one string with in-place \\slice annotations.
-    - Otherwise, if slice_indices or n_slices>1, returns a list of subcircuit strings.
+    - Otherwise, if subcircuit_indices or num_subcircuits>1, returns a list of subcircuit strings.
     """
     if slice_all or (slice_titles and len(slice_titles) > 0):
         return _render(qc, include_clbits, slice_titles, slice_all)
-    if slice_indices or (n_slices and n_slices > 1):
-        if slice_indices:
-            bounds = sorted({0, *slice_indices, len(qc.data)})
+    if subcircuit_indices or (num_subcircuits and num_subcircuits > 1):
+        if subcircuit_indices:
+            bounds = sorted({0, *subcircuit_indices, len(qc.data)})
             subcircs = _split_circuit_by_indices(qc, bounds)
         else:
-            subcircs = _split_circuit_by_count(qc, n_slices)
+            subcircs = _split_circuit_by_count(qc, num_subcircuits)
         return [_render(s, include_clbits, slice_titles, slice_all) for s in subcircs]
     return _render(qc, include_clbits, slice_titles, slice_all)

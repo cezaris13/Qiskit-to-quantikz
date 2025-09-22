@@ -122,7 +122,6 @@ class QuantikzTests(absltest.TestCase):
         circuit.swap(0, 2)
 
         result = qiskit_to_quantikz(circuit)
-        print(result)
         self.assertEqual(result, actual_result)
 
     def test_ccx(self):
