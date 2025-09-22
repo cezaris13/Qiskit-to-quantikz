@@ -60,8 +60,8 @@ To annotate slices inline with custom titles:
 slice_titles = {0: "|\psi_0\rangle", 1: "|\psi_1\rangle", 2: "|\psi_2\rangle"}
 latex = qq.qiskit_to_quantikz(qc, slice_titles=slice_titles)
 #+END_SRC
-#+attr_html: :alt  :align left :class imgs
 Quantikz slices:
+#+attr_html: :alt  :align left :class imgs
 [[./Images/quantikz_slices.jpeg]]
 
 
