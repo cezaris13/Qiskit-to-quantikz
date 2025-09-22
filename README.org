@@ -47,7 +47,9 @@ To split into 3 equal parts:
 latex_parts = qq.qiskit_to_quantikz(qc, num_subcircuits=3)
 #+END_SRC
 #+attr_html: :alt  :align left :class imgS
-[[./Images/qiskit.jpeg][Qiskit representation]]
+#+CAPTION: Qiskit representation
+#+NAME:   fig:SED-HR4049
+[[./Images/qiskit.jpeg]]
 
 #+attr_html: :alt  :align left :class img
 [[./Images/quantikz.jpeg][Quantikz representation]]
