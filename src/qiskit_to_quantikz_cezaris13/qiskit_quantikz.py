@@ -59,7 +59,7 @@ def _render_swap(qargs, sub: QuantumCircuit, q_lines, c_lines, token_slice: str)
     i0, i1 = sorted((sub.qubits.index(qargs[0]), sub.qubits.index(qargs[1])))
     for i in range(sub.num_qubits):
         if i == i0:
-            q_lines[i].append(rf"\swap{{{i1}}}" + token_slice)
+            q_lines[i].append(rf"\swap{{{i1-i0}}}" + token_slice)
         elif i == i1:
             q_lines[i].append(r"\targX{}" + token_slice)
         else:

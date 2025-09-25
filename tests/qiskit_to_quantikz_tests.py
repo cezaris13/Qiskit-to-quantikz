@@ -251,7 +251,6 @@ class QuantikzTests(absltest.TestCase):
 
         qc = QuantumCircuit(2)
         qc.append(unitary_gate, [0, 1])
-        qc.draw("mpl")
 
         result = qiskit_to_quantikz(qc)
         self.assertEqual(result, actual_result)
@@ -272,11 +271,23 @@ class QuantikzTests(absltest.TestCase):
         qc.append(unitary_gate_1, [0, 1])
         qc.append(unitary_gate_2, [0, 1,2])
         qc.append(unitary_gate_1, [1, 2])
-        qc.draw("mpl")
 
         result = qiskit_to_quantikz(qc)
         self.assertEqual(result, actual_result)
 
+    def test_multiple_swap(self):
+        actual_result = r"""\begin{quantikz}
+\lstick{${q_0}$} & \swap{1} & \qw & \swap{1} & \\
+\lstick{${q_1}$} & \targX{} & \swap{1} & \targX{} & \\
+\lstick{${q_2}$} & \qw & \targX{} & \qw &
+\end{quantikz}"""
+
+        qc = QuantumCircuit(3)
+        qc.swap(0,1)
+        qc.swap(1,2)
+        qc.swap(0,1)
+        result = qiskit_to_quantikz(qc)
+        self.assertEqual(result, actual_result)
 
 if __name__ == "__main__":
     absltest.main()
