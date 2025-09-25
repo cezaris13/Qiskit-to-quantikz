@@ -29,13 +29,6 @@ def _split_circuit_by_count(qc: QuantumCircuit, num_subcircuits: int) -> List[Qu
 
 # --- Helper render functions ---
 
-
-def _init_lines(sub: QuantumCircuit, include_clbits: bool):
-    q_lines = [[] for _ in range(sub.num_qubits)]
-    c_lines = [[] for _ in range(sub.num_clbits if include_clbits else 0)]
-    return q_lines, c_lines
-
-
 def _add_slices(col: int, slice_all: bool, slice_titles: Optional[Dict[int, str]]):
     if slice_all:
         return rf"\slice{{{col+1}}}"
@@ -44,19 +37,29 @@ def _add_slices(col: int, slice_all: bool, slice_titles: Optional[Dict[int, str]
     return ""
 
 
-def _render_measure(
-    qargs, cargs, sub: QuantumCircuit, q_lines, c_lines, token_slice: str
-):
+def pad_q_lines(start, end, q_lines):
+    lo, hi = sorted((start, end))
+
+    # compute max length among the q_lines in the range [lo..hi]
+    max_len = max((len(q_lines[i]) for i in range(lo, hi + 1)), default=0)
+
+    # pad each line in that range up to max_len with \qw
+    for i in range(lo, hi + 1):
+        if len(q_lines[i]) < max_len:
+            q_lines[i].extend([r"\qw"] * (max_len - len(q_lines[i])))
+
+
+def _render_measure(qargs, sub: QuantumCircuit, q_lines):
     measured = {sub.qubits.index(q) for q in qargs}
+    pad_q_lines(min(measured), max(measured), q_lines)
     for i in range(sub.num_qubits):
-        q_lines[i].append((r"\meter{}" if i in measured else r"\qw") + token_slice)
-    for j in range(len(c_lines)):
-        written = any(sub.clbits.index(c) == j for c in cargs)
-        c_lines[j].append((r"\cw" if written else r"\qw") + token_slice)
+        if i in measured:
+            q_lines[i].append(r"\meter{}")
 
 
-def _render_swap(qargs, sub: QuantumCircuit, q_lines, c_lines, token_slice: str):
+def _render_swap(qargs, sub: QuantumCircuit, q_lines, token_slice: str):
     i0, i1 = sorted((sub.qubits.index(qargs[0]), sub.qubits.index(qargs[1])))
+    pad_q_lines(i0, i1, q_lines)
     for i in range(sub.num_qubits):
         if i == i0:
             q_lines[i].append(rf"\swap{{{i1-i0}}}" + token_slice)
@@ -64,25 +67,25 @@ def _render_swap(qargs, sub: QuantumCircuit, q_lines, c_lines, token_slice: str)
             q_lines[i].append(r"\targX{}" + token_slice)
         else:
             q_lines[i].append(r"\qw" + token_slice)
-    for _ in range(len(c_lines)):
-        c_lines[_].append(r"\qw" + token_slice)
 
 
-def _render_unitary_gate(instr, qargs, sub: QuantumCircuit, q_lines, c_lines, token_slice: str):
-    i0, _ = sorted((sub.qubits.index(qargs[0]), sub.qubits.index(qargs[1])))
+def _render_unitary_gate(instr, qargs, sub: QuantumCircuit, q_lines, token_slice: str):
+    i0, i1 = sorted((sub.qubits.index(qargs[0]), sub.qubits.index(qargs[1])))
+    pad_q_lines(i0,i1,q_lines)
     for i in range(sub.num_qubits):
         if i == i0:
             q_lines[i].append(rf"\gate[{instr.num_qubits}]{{{instr.name}}}" + token_slice)
         else:
             q_lines[i].append(r"\qw" + token_slice)
-    for _ in range(len(c_lines)):
-        c_lines[_].append(r"\qw" + token_slice)
 
 
 def _render_cswap(
-    qargs, sub: QuantumCircuit, q_lines, c_lines, token_slice: str
+    qargs, sub: QuantumCircuit, q_lines, token_slice: str
 ):
     ctrl, s0, s1 = [sub.qubits.index(q) for q in qargs]
+    lo, _, hi = sorted((ctrl, s0, s1))
+
+    pad_q_lines(lo, hi, q_lines)
     for i in range(sub.num_qubits):
         if i == ctrl:
             off = s0 - ctrl
@@ -93,15 +96,14 @@ def _render_cswap(
             q_lines[i].append(r"\targX{}" + token_slice)
         else:
             q_lines[i].append(r"\qw" + token_slice)
-    for _ in range(len(c_lines)):
-        c_lines[_].append(r"\qw" + token_slice)
 
 
 def _render_multi_qubit(
-    instr, qargs, sub: QuantumCircuit, q_lines, c_lines, token_slice: str
+    instr, qargs, sub: QuantumCircuit, q_lines, token_slice: str
 ):
     idxs = [sub.qubits.index(q) for q in qargs]
     ctrls, tgt = idxs[:-1], idxs[-1]
+    pad_q_lines(min(idxs),max(idxs), q_lines)
     name = instr.name.lower()
     if name in ("ccx", "mct") or "x" in name:
         targ_sym = r"\targ{}"
@@ -117,14 +119,13 @@ def _render_multi_qubit(
             q_lines[i].append(targ_sym + token_slice)
         else:
             q_lines[i].append(r"\qw" + token_slice)
-    for _ in range(len(c_lines)):
-        c_lines[_].append(r"\qw" + token_slice)
 
 
 def _render_two_qubit(
-    instr, qargs, sub: QuantumCircuit, q_lines, c_lines, token_slice: str
+    instr, qargs, sub: QuantumCircuit, q_lines, token_slice: str
 ):
     ctrl, tgt = sub.qubits.index(qargs[0]), sub.qubits.index(qargs[1])
+    pad_q_lines(ctrl,tgt, q_lines)
     name = instr.name.lower()
     params = getattr(instr, "params", [])
     if name in ("crx", "cry", "crz") and params:
@@ -160,12 +161,10 @@ def _render_two_qubit(
                     q_lines[i].append(rf"\gate{{{instr.name.upper()}}}" + token_slice)
                 else:
                     q_lines[i].append(r"\qw" + token_slice)
-    for _ in range(len(c_lines)):
-        c_lines[_].append(r"\qw" + token_slice)
 
 
 def _render_default(
-    instr, qargs, sub: QuantumCircuit, q_lines, c_lines, token_slice: str
+    instr, qargs, sub: QuantumCircuit, q_lines, token_slice: str
 ):
     name = instr.name.lower()
     params = getattr(instr, "params", [])
@@ -175,57 +174,42 @@ def _render_default(
         for i in range(sub.num_qubits):
             if sub.qubits.index(qargs[0]) == i:
                 q_lines[i].append(rf"\gate{{R_{axis}({theta})}}" + token_slice)
-            else:
-                q_lines[i].append(r"\qw" + token_slice)
-        for _ in range(len(c_lines)):
-            c_lines[_].append(r"\qw" + token_slice)
         return
     targets = {sub.qubits.index(q) for q in qargs}
     for i in range(sub.num_qubits):
         if i in targets:
             q_lines[i].append(rf"\gate{{{instr.name.upper()}}}" + token_slice)
-        else:
-            q_lines[i].append(r"\qw" + token_slice)
-    for _ in range(len(c_lines)):
-        c_lines[_].append(r"\qw" + token_slice)
-
 
 def _render(
     sub: QuantumCircuit,
-    include_clbits: bool = True,
     slice_titles: Optional[Dict[int, str]] = None,
     slice_all: bool = False,
 ) -> str:
     """
     Render a single QuantumCircuit subcircuit into Quantikz LaTeX, with optional in-place slice annotations.
     """
-    q_lines, c_lines = _init_lines(sub, include_clbits)
+    q_lines = [[] for _ in range(sub.num_qubits)]
     for col, circuit_instruction in enumerate(sub.data):
-        instr, qargs, cargs = circuit_instruction.operation, circuit_instruction.qubits, circuit_instruction.clbits
+        instr, qargs, _ = circuit_instruction.operation, circuit_instruction.qubits, circuit_instruction.clbits
         token_slice = _add_slices(col, slice_all, slice_titles)
         name = instr.name.lower()
         if name == "measure":
-            _render_measure(qargs, cargs, sub, q_lines, c_lines, token_slice)
+            _render_measure(qargs, sub, q_lines)
         elif instr.name == "unitary":
-            _render_unitary_gate(instr, qargs, sub, q_lines, c_lines, token_slice)
+            _render_unitary_gate(instr, qargs, sub, q_lines, token_slice)
         elif name == "swap" and instr.num_qubits == 2:
-            _render_swap(qargs, sub, q_lines, c_lines, token_slice)
+            _render_swap(qargs, sub, q_lines, token_slice)
         elif name in ("cswap", "fredkin") and instr.num_qubits == 3:
-            _render_cswap(qargs, sub, q_lines, c_lines, token_slice)
+            _render_cswap(qargs, sub, q_lines, token_slice)
         elif instr.num_qubits >= 3 and name not in ("cswap", "fredkin"):
-            _render_multi_qubit(instr, qargs, sub, q_lines, c_lines, token_slice)
+            _render_multi_qubit(instr, qargs, sub, q_lines, token_slice)
         elif instr.num_qubits == 2:
-            _render_two_qubit(instr, qargs, sub, q_lines, c_lines, token_slice)
+            _render_two_qubit(instr, qargs, sub, q_lines, token_slice)
         else:
-            _render_default(instr, qargs, sub, q_lines, c_lines, token_slice)
+            _render_default(instr, qargs, sub, q_lines, token_slice)
     for i, line in enumerate(q_lines):
         line.insert(0, rf"\lstick{{${{q_{i}}}$}}")
-    if c_lines:
-        for j, line in enumerate(c_lines):
-            line.insert(0, rf"\lstick{{${{c_{j}}}$}}")
     rows = [" & ".join(l) + r" & \\" for l in q_lines]
-    if c_lines:
-        rows += [" & ".join(l) + r" & \\" for l in c_lines]
     body = "\n".join(rows)
     return _remove_last_occurrence(
         "\n".join([r"\begin{quantikz}", body, r"\end{quantikz}"]), r" \\"
@@ -241,7 +225,6 @@ def _remove_last_occurrence(s, sub):
 
 def qiskit_to_quantikz(
     qc: QuantumCircuit,
-    include_clbits: bool = True,
     num_subcircuits: Optional[int] = None,
     subcircuit_indices: Optional[List[int]] = None,
     slice_titles: Optional[Dict[int, str]] = None,
@@ -253,12 +236,12 @@ def qiskit_to_quantikz(
     - Otherwise, if subcircuit_indices or num_subcircuits>1, returns a list of subcircuit strings.
     """
     if slice_all or (slice_titles and len(slice_titles) > 0):
-        return _render(qc, include_clbits, slice_titles, slice_all)
+        return _render(qc, slice_titles, slice_all)
     if subcircuit_indices or (num_subcircuits and num_subcircuits > 1):
         if subcircuit_indices:
             bounds = sorted({0, *subcircuit_indices, len(qc.data)})
             subcircs = _split_circuit_by_indices(qc, bounds)
         else:
             subcircs = _split_circuit_by_count(qc, num_subcircuits)
-        return [_render(s, include_clbits, slice_titles, slice_all) for s in subcircs]
-    return _render(qc, include_clbits, slice_titles, slice_all)
+        return [_render(s, slice_titles, slice_all) for s in subcircs]
+    return _render(qc, slice_titles, slice_all)

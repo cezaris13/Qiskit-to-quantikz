@@ -190,32 +190,6 @@ class QuantikzTests(absltest.TestCase):
         result = qiskit_to_quantikz(circuit)
         self.assertEqual(result, actual_result)
 
-    def test_cx_measure_no_cl_bits(self):
-        actual_result = r"""\begin{quantikz}
-\lstick{${q_0}$} & \ctrl{1} & \meter{} & \qw & \\
-\lstick{${q_1}$} & \targ{} & \qw & \meter{} &
-\end{quantikz}"""
-
-        circuit = QuantumCircuit(2, 2)
-        circuit.cx(0, 1)
-        circuit.measure([0, 1], [0, 1])
-        result = qiskit_to_quantikz(circuit, include_clbits=False)
-        self.assertEqual(result, actual_result)
-
-    def test_cx_measure_cl_bits(self):
-        actual_result = r"""\begin{quantikz}
-\lstick{${q_0}$} & \ctrl{1} & \meter{} & \qw & \\
-\lstick{${q_1}$} & \targ{} & \qw & \meter{} & \\
-\lstick{${c_0}$} & \qw & \cw & \qw & \\
-\lstick{${c_1}$} & \qw & \qw & \cw &
-\end{quantikz}"""
-
-        circuit = QuantumCircuit(2, 2)
-        circuit.cx(0, 1)
-        circuit.measure([0, 1], [0, 1])
-        result = qiskit_to_quantikz(circuit, include_clbits=True)
-        self.assertEqual(result, actual_result)
-
     def test_slicing_all(self):
         qc = QuantumCircuit(1)
         qc.h(0)
@@ -288,6 +262,58 @@ class QuantikzTests(absltest.TestCase):
         qc.swap(0,1)
         result = qiskit_to_quantikz(qc)
         self.assertEqual(result, actual_result)
+
+    def test_multi_hadamard(self):
+        actual_result = r"""\begin{quantikz}
+\lstick{${q_0}$} & \gate{H} & \\
+\lstick{${q_1}$} & \gate{H} & \\
+\lstick{${q_2}$} & \gate{H} &
+\end{quantikz}"""
+        qc = QuantumCircuit(3)
+        qc.h([0,1,2])
+
+        result = qiskit_to_quantikz(qc)
+        self.assertEqual(result, actual_result)
+
+    def test_bell_state(self):
+        actual_result = r"""\begin{quantikz}
+\lstick{${q_0}$} & \gate{H} & \ctrl{1} & \\
+\lstick{${q_1}$} & \qw & \targ{} &
+\end{quantikz}"""
+        qc = QuantumCircuit(2)
+        qc.h(0)
+        qc.cx(0,1)
+
+        result = qiskit_to_quantikz(qc)
+        self.assertEqual(result, actual_result)
+
+    def test_measurement(self):
+        actual_result = r"""\begin{quantikz}
+\lstick{${q_0}$} & \gate{H} & \meter{} & \\
+\lstick{${q_1}$} & \gate{H} & \meter{} & \\
+\lstick{${q_2}$} & \gate{H} & \meter{} &
+\end{quantikz}"""
+        qc = QuantumCircuit(3,3)
+        qc.h([0,1,2])
+
+        qc.measure([0,1,2], [0,1,2])
+        result = qiskit_to_quantikz(qc)
+        self.assertEqual(result, actual_result)
+
+    def test_cx_measurement(self):
+        actual_result = r"""\begin{quantikz}
+\lstick{${q_0}$} & \gate{H} & \ctrl{1} & \qw & \meter{} & \\
+\lstick{${q_1}$} & \gate{H} & \targ{} & \ctrl{1} & \meter{} & \\
+\lstick{${q_2}$} & \gate{H} & \qw & \targ{} & \meter{} &
+\end{quantikz}"""
+        qc = QuantumCircuit(3,3)
+        qc.h([0,1,2])
+        qc.cx(0,1)
+        qc.cx(1,2)
+        qc.measure([0,1,2], [0,1,2])
+        result = qiskit_to_quantikz(qc)
+        self.assertEqual(result, actual_result)
+
 
 if __name__ == "__main__":
     absltest.main()
